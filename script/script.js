@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     goodsWrapper.append(createCardGoods(3, 'socks', 1500, 'socks.jpg'));
 
     const openCart = (e) => {
-        console.log(e);
+
         e.preventDefault();
         cart.style.display = 'flex';
     }
