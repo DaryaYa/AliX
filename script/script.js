@@ -9,16 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
         wishlistCounter = wishListBtn.querySelector('.counter');
 
     const wishlist = [];
-    let goodsBasket = {};
+    const goodsBasket = {};
     const cartWrapper = document.querySelector('.cart-wrapper');
 
-    const loading = () => {
-        goodsWrapper.innerHTML = `<div id="spinner"><div class="spinner-loading"><div><div><div></div>
-</div><div><div></div></div><div><div></div></div><div><div></div></div></div></div></div>`
+
+    const loading = (nameFunction) => {
+        const spinner = `<div id="spinner"><div class="spinner-loading"><div><div><div></div>
+</div><div><div></div></div><div><div></div></div><div><div></div></div></div></div></div>`;
+        if (nameFunction === 'renderCard') {
+            goodsWrapper.innerHTML = spinner;
+        }
+        if ((nameFunction === 'renderBasket')) {
+            cartWrapper.innerHTML = spinner;
+        }
     }
 
     const getGoods = (handler, filter) => {
-        loading();
+        loading(handler.name);
         fetch('db/db.json')
             .then(response => response.json())
             .then(filter)
@@ -77,34 +84,51 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="goods-add-wishlist ${(wishlist.includes(id)) ? 'active' : ''}" data-goods-id='${id}'></button>
                             <button class="goods-delete" data-goods-id='${id}'></button>
                         </div>
-                        <div class="goods-count">1</div>
+                        <div class="goods-count">${goodsBasket[id]}</div>
                     </div>`;
 
         return card;
     };
 
     const renderBasket = goods => {
-        cartWrapper.textContent = '';
+            cartWrapper.textContent = '';
 
-        if (goods.length) {
-            goods.forEach(({ id, title, price, imgMin }) => {
-                cartWrapper.append(createCardGoodsBasket(id, title, price, imgMin))
-            });
-        } else {
-            cartWrapper.innerHTML = '<div id="cart-empty"> ❌ No goods in your Cart</div>';
+            if (goods.length) {
+                goods.forEach(({ id, title, price, imgMin }) => {
+                    cartWrapper.append(createCardGoodsBasket(id, title, price, imgMin))
+                });
+            } else {
+                cartWrapper.innerHTML = '<div id="cart-empty"> ❌ No goods in your Cart</div>';
+            }
         }
+        // goodsWrapper.append(createCardGoods(1, 'darts', 2000, './img/temp/Archer.jpg'));
+        // goodsWrapper.append(createCardGoods(2, 'flamingo', 3000, './img/temp/Flamingo.jpg'));
+        // goodsWrapper.append(createCardGoods(3, 'socks', 1500, './img/temp/socks.jpg'));
 
+    const calcTotalPrice = goods => {
+
+        let sum = goods.reduce((a, b) => {
+            return a + b.price * goodsBasket[b.id];
+        }, 0);
+        // let sum = 0;
+        // for (const item of goods) {
+        //     console.log(item)
+        //     sum += item.price * goodsBasket[item.id];
+        // }
+        cart.querySelector('.cart-total>span').textContent = sum.toFixed(2);
     }
 
-
-
-    // goodsWrapper.append(createCardGoods(1, 'darts', 2000, './img/temp/Archer.jpg'));
-    // goodsWrapper.append(createCardGoods(2, 'flamingo', 3000, './img/temp/Flamingo.jpg'));
-    // goodsWrapper.append(createCardGoods(3, 'socks', 1500, './img/temp/socks.jpg'));
+    const showCardBasket = goods => {
+        const basketGoods = goods.filter(item => goodsBasket.hasOwnProperty(item.id));
+        calcTotalPrice(basketGoods);
+        return basketGoods;
+    }
 
     const openCart = e => {
         e.preventDefault();
         cart.style.display = 'flex';
+        document.addEventListener('keyup', closeCart);
+        getGoods(renderBasket, showCardBasket);
     }
 
     const closeCart = (event) => {
@@ -112,6 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target === cart || target.classList.contains('cart-close')) {
             cart.style.display = '';
         }
+        // if (target === cart || target.classList.contains('goods-delete')) {
+        //     console.log(target.dataset.goodsId, goodsBasket);
+        //     delete goodsBasket[target.dataset.goodsId];
+        //     getGoods(renderBasket, showCardBasket);
+        //      checkCount();
+        // }
     }
 
     document.addEventListener('keyup', (e) => {
@@ -155,13 +185,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cookieQuery = get => {
         if (get) {
-            goodsBasket = JSON.parse(getCookie('goodsBasket'));
-            console.log(getCookie('goodsBasket'))
+            if (getCookie('goodsBasket')) {
+
+                Object.assign(goodsBasket, JSON.parse(getCookie('goodsBasket')))
+                    // goodsBasket = JSON.parse(getCookie('goodsBasket'));
+                console.log(getCookie('goodsBasket'));
+                checkCount();
+            }
         } else {
             document.cookie = `goodsBasket=${JSON.stringify(goodsBasket)}; max-age=864000`
         }
         console.log(goodsBasket);
-        checkCount();
+
     }
 
     const checkCount = () => {
@@ -177,12 +212,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (get) {
             if (localStorage.getItem('wishlist')) {
-                JSON.parse(localStorage.getItem('wishlist')).forEach(id => wishlist.push(id));
+                wishlist.push(...JSON.parse(localStorage.getItem('wishlist')));
+                // JSON.parse(localStorage.getItem('wishlist')).forEach(id => wishlist.push(id));
             }
+            checkCount();
         } else {
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
         }
-        checkCount();
     }
 
     const toggleWishlist = (id, elem) => {
@@ -219,6 +255,24 @@ document.addEventListener('DOMContentLoaded', () => {
             addBasket(target.dataset.goodsId);
         }
 
+    };
+
+    const removeGoods = id => {
+        delete goodsBasket[id];
+        checkCount();
+        cookieQuery();
+        getGoods(renderBasket, showCardBasket);
+    }
+
+    const handlerBasket = () => {
+        const target = event.target;
+
+        if (target.classList.contains('goods-add-wishlist')) {
+            toggleWishlist(target.dataset.goodsId, target);
+        };
+        if (target.classList.contains('goods-delete')) {
+            removeGoods(target.dataset.goodsId);
+        };
     }
 
     cartBtn.addEventListener('click', openCart);
@@ -227,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     search.addEventListener('submit', searchGoods);
     goodsWrapper.addEventListener('click', handlerGoods);
     wishListBtn.addEventListener('click', showWishList);
+    cartWrapper.addEventListener('click', handlerBasket);
 
     getGoods(renderCard, randomSort);
     storageQuery(true);
