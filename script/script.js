@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const goodsBasket = {};
     const cartWrapper = document.querySelector('.cart-wrapper');
 
-
     const loading = (nameFunction) => {
         const spinner = `<div id="spinner"><div class="spinner-loading"><div><div><div></div>
 </div><div><div></div></div><div><div></div></div><div><div></div></div></div></div></div>`;
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cartWrapper.append(createCardGoodsBasket(id, title, price, imgMin))
                 });
             } else {
-                cartWrapper.innerHTML = '<div id="cart-empty"> ❌ No goods in your Cart</div>';
+                cartWrapper.innerHTML = '<div id="cart-empty"> ❌ No goods in your cart</div>';
             }
         }
         // goodsWrapper.append(createCardGoods(1, 'darts', 2000, './img/temp/Archer.jpg'));
@@ -141,14 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
         //     delete goodsBasket[target.dataset.goodsId];
         //     getGoods(renderBasket, showCardBasket);
         //      checkCount();
+        //      cookieQuery();
         // }
-    }
-
-    document.addEventListener('keyup', (e) => {
-        if (e.keyCode === 27) {
-            cart.style.display = '';
-        };
-    })
+    };
 
     const choiceCategory = event => {
         event.preventDefault();
@@ -158,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = target.dataset.category;
             getGoods(renderCard, goods => goods.filter(item => item.category.includes(category)))
         }
-    }
+    };
 
     const searchGoods = (event) => {
         event.preventDefault();
@@ -189,15 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 Object.assign(goodsBasket, JSON.parse(getCookie('goodsBasket')))
                     // goodsBasket = JSON.parse(getCookie('goodsBasket'));
-                console.log(getCookie('goodsBasket'));
                 checkCount();
             }
         } else {
             document.cookie = `goodsBasket=${JSON.stringify(goodsBasket)}; max-age=864000`
         }
-        console.log(goodsBasket);
-
-    }
+    };
 
     const checkCount = () => {
         wishlistCounter.textContent = wishlist.length;
@@ -206,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showWishList = () => {
         getGoods(renderCard, goods => goods.filter(item => wishlist.includes(item.id)));
-    }
+    };
 
     const storageQuery = get => {
 
@@ -219,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
         }
-    }
+    };
 
     const toggleWishlist = (id, elem) => {
         if (wishlist.includes(id)) {
@@ -241,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         checkCount();
         cookieQuery();
-        console.log(goodsBasket)
     };
 
     const handlerGoods = event => {
@@ -262,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         checkCount();
         cookieQuery();
         getGoods(renderBasket, showCardBasket);
-    }
+    };
 
     const handlerBasket = () => {
         const target = event.target;
@@ -273,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('goods-delete')) {
             removeGoods(target.dataset.goodsId);
         };
-    }
+    };
 
     cartBtn.addEventListener('click', openCart);
     cart.addEventListener('click', closeCart);
@@ -282,6 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
     goodsWrapper.addEventListener('click', handlerGoods);
     wishListBtn.addEventListener('click', showWishList);
     cartWrapper.addEventListener('click', handlerBasket);
+
+    document.addEventListener('keyup', (e) => {
+        if (e.keyCode === 27) {
+            cart.style.display = '';
+        };
+    })
 
     getGoods(renderCard, randomSort);
     storageQuery(true);
